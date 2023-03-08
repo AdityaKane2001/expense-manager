@@ -42,5 +42,6 @@ def hello_world():
     
     return connect_db().__repr__()
 
-if __name__ == "__main__":
+
+def runner():
     app.run()
