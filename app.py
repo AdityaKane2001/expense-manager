@@ -22,7 +22,7 @@ def connect_db():
     )
     return conn
 
-@app.route('/expense', methods=['POST'])
+@app.route('/expense', methods=['GET'])
 def add_expense():
     db = connect_db()
     cursor = db.cursor()
