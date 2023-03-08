@@ -43,5 +43,5 @@ def hello_world():
     return connect_db().__repr__()
 
 
-def runner():
+def runner(*args, **kwargs):
     app.run()
