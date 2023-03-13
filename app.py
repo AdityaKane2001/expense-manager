@@ -43,4 +43,4 @@ def hello_world():
 
 
 def runner(*args, **kwargs):
-    app.run()
+    app.run(host="0.0.0.0", debug=False)
