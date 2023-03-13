@@ -39,8 +39,7 @@ def add_expense():
 
 @app.route("/")
 def hello_world():
-    
-    return connect_db().__repr__()
+    return "Hello world!"
 
 
 def runner(*args, **kwargs):
