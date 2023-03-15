@@ -1,9 +1,10 @@
-from flask import Flask, jsonify, request
+from flask import Flask, request, render_template
 from flask_cors import CORS
 import urllib.parse as up
 from dotenv import load_dotenv
 import os
 import psycopg2
+import psycopg2.extras
 
 app = Flask(__name__)
 CORS(app)
@@ -24,25 +25,46 @@ def connect_db():
     )
     return conn
 
-@app.route('/expense', methods=['GET'])
+
+@app.route("/income", methods=["POST"])
+def add_income():
+    conn = connect_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cursor.execute("insert into transactions ")
+    del conn
+
+@app.route('/expense', methods=["POST"])
 def add_expense():
-    db = connect_db()
-    cursor = db.cursor()
+    conn = connect_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute('select before_gpay, after_gpay, before_cash, after_cash from transactions where id=(select max(id) from transactions);')
+    # cursor.execute('select * from transactions;')
+    
     transactions = cursor.fetchall()
+    
+    
     # cursor.execute(f"INSERT INTO transactions  VALUES( '{account}', {amount}, '{transaction_type}', '{before_gpay}', '{after_gpay}', '{before_cash}', '{after_cash}', '{datetime}', '{description}');")
     return transactions
-    # db.commit()
+    # conn.commit()
     # cursor.close()
-    # db.close()
+    # conn.close()
     # before
     return {"status": 200}
 
 
-@app.route("/")
+@app.route("/ping")
 def hello_world():
-    return "Hello world!"
+    return "Ping successful!"
 
+
+@app.route("/")
+def show_transactions():
+    conn = connect_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cursor.execute('select * from transactions order by id desc;')
+    transactions = [dict(transac) for transac in cursor.fetchall()]
+    
+    return render_template("transactions.html", records=transactions)
 
 if __name__ == "__main__": 
     app.run(host="0.0.0.0", port=5000, debug=False)
