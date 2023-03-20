@@ -12,7 +12,29 @@
 </head>
 
 <body>
-
+    <div class="container">
+        <h1>Expense Manager</h1><br><br>
+        <h3>Record Income</h3><br><br>
+        <form method="POST" action="/income">
+            <div class="form-group">
+                <label for="account">Account select</label>
+                <select class="form-control" id="account" name="account">
+                    <option>gpay</option>
+                    <option>cash</option>
+                </select>
+            </div><br>
+            <div class="form-group">
+                <label for="amount">Amount received</label>
+                <input type="text" class="form-control" id="amount" name="amount" placeholder="Amount">
+            </div><br>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <input type="text" class="form-control" id="description" name="description">
+            </div><br>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div><br>
+    <a href="/">Back to home</a>
 
 </body>
 

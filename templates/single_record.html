@@ -15,9 +15,29 @@
     <div class="container">
 
         <h1>Expense Manager</h1>
+        <br>
+        <h3>Transaction record #{{fields["id"]}}</h3>
+        <br>
+
+        {% if fields["id"] == -1 %}
+            <p style="color:red"> Transaction ID not found </p>               
+        {% else %}
+            <table class="table">
+                {% for name, value in fields.items() %}
+                    <tr>
+                    <th scope="row">{{name}}</th>
+                    <td>{{value}}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            </table>
 
         
-
+        {% endif %}
+        <br><br>
+        <a class="btn btn-primary" href="#" role="button">Link</a>
+        <br><br>
+        <a href="/">Back to home</a>
 
     </div>
     

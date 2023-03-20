@@ -1,40 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
-    <title>Expense Manager</title>
-</head>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
+            integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+        <title>Expense Manager</title>
+    </head>
 
-<body>
-    <div class="container">
-        <form method="POST" action="/expense">
-            <div class="form-group">
-                <label for="account">Example select</label>
-                <select class="form-control" id="account" name="account">
-                <option>gpay</option>
-                <option>cash</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="amount">Amount spent</label>
-                <input type="text" class="form-control" id="amount" name="amount" placeholder="Amount">
-            </div>
-            <div class="form-group">
-                <label for="description">Description</label>
-                <input type="text" class="form-control" id="description" name="description">
-            </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
-    </div>
-    <h1>
+    <body>
+        <div class="container">
+            <h1>Expense Manager</h1><br><br>
+            <h3>Record Expense</h3><br><br>
+            <form method="POST" action="/expense">
+                <div class="form-group">
+                    <label for="account">Example select</label>
+                    <select class="form-control" id="account" name="account">
+                    <option>gpay</option>
+                    <option>cash</option>
+                    </select>
+                </div><br>
+                <div class="form-group">
+                    <label for="amount">Amount spent</label>
+                    <input type="text" class="form-control" id="amount" name="amount" placeholder="Amount">
+                </div><br>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <input type="text" class="form-control" id="description" name="description">
+                </div><br>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+            <a href="/">Back to home</a>
+        </div>
+        
 
-</body>
+    </body>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"
