@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 import os
 import psycopg2
 import psycopg2.extras
+from datetime import datetime
+
 
 app = Flask(__name__)
 CORS(app)
@@ -30,25 +32,51 @@ def connect_db():
 def add_income():
     conn = connect_db()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cursor.execute("insert into transactions ")
+    cursor.execute("insert into transactions values")
     del conn
 
-@app.route('/expense', methods=["POST"])
+@app.route('/expense', methods=["GET", "POST"])
 def add_expense():
-    conn = connect_db()
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cursor.execute('select before_gpay, after_gpay, before_cash, after_cash from transactions where id=(select max(id) from transactions);')
-    # cursor.execute('select * from transactions;')
+
+    if request.method == "POST":
+        conn = connect_db()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cursor.execute('select before_gpay, after_gpay, before_cash, after_cash from transactions where id=(select max(id) from transactions);')
+
+        transaction = dict(cursor.fetchall()[0])
+
+        del cursor
+
+        
+        account = request.form["account"]
+        amount = int(request.form["amount"])
+        datetime_str = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+        description = request.form["description"]
+        
+        before_gpay = int(transaction["before_gpay"])
+        after_gpay = int(transaction["after_gpay"]) 
+        before_cash = int(transaction["before_cash"])
+        after_cash = int(transaction["after_cash"])
+
+        if account == "gpay":
+            after_gpay = before_gpay - amount
+            after_cash = before_cash
+        else:
+            after_cash = before_cash - amount
+            after_gpay = before_gpay
+        
+        conn = connect_db()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cursor.execute(f"insert into transactions(account, amount, type, before_gpay, after_gpay, before_cash, after_cash, datetime, description) " +
+                       f"values ( '{account}', {amount}, -1, {before_gpay}, {after_gpay}, {before_cash}, {after_cash}, '{datetime_str}', '{description}') returning id;")
+        transaction_id = cursor.fetchall()[0]["id"]
+        return render_template("transaction_record_success.html", transaction_id=transaction_id)
+    else:
+        return render_template("expense.html")
     
-    transactions = cursor.fetchall()
     
-    
-    # cursor.execute(f"INSERT INTO transactions  VALUES( '{account}', {amount}, '{transaction_type}', '{before_gpay}', '{after_gpay}', '{before_cash}', '{after_cash}', '{datetime}', '{description}');")
-    return transactions
-    # conn.commit()
-    # cursor.close()
-    # conn.close()
-    # before
+
+
     return {"status": 200}
 
 
