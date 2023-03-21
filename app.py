@@ -28,6 +28,50 @@ def connect_db():
     return conn
 
 
+def update_single_transaction(id, cursor, transaction_data):
+    account = transaction_data["account"]
+    amount = int(transaction_data["amount"])
+    datetime_str = transaction_data["datetime"]
+    description = transaction_data["description"]
+    
+    before_gpay = int(transaction_data["before_gpay"])
+    after_gpay = int(transaction_data["after_gpay"]) 
+    before_cash = int(transaction_data["before_cash"])
+    after_cash = int(transaction_data["after_cash"])
+    transaction_type = int(transaction_data["type"])
+
+
+    cursor.execute(f"UPDATE TRANSACTIONS SET ACCOUNT='{account}', " +
+                           f"AMOUNT={amount}, TYPE={transaction_type}, BEFORE_GPAY={before_gpay}, " +
+                           f"AFTER_GPAY={after_gpay}, BEFORE_CASH={before_cash}, AFTER_CASH={after_cash}, " +
+                           f"DATETIME='{datetime_str}', DESCRIPTION='{description}'  WHERE id={id};")
+
+def update_affected_transactions(id, cursor, new_transaction):
+    cursor.execute(f"SELECT * FROM TRANSACTIONS WHERE id > {id};")
+    transactions = cursor.fetchall()
+    if len(transactions) == 0:
+        return 0
+    else:
+        prev_transaction = new_transaction
+        for transaction in transactions:
+            
+            transaction["before_cash"] = int(prev_transaction["after_cash"])
+            transaction["before_gpay"] = int(prev_transaction["after_gpay"])
+
+            if transaction["account"] == "cash":
+                transaction["after_cash"] = (transaction["type"] * transaction["amount"]) + int(transaction["before_cash"])
+                transaction["after_gpay"] = int(transaction["before_gpay"])
+            else:
+                transaction["after_gpay"] = (transaction["type"] * transaction["amount"]) + int(transaction["before_gpay"])
+                transaction["after_cash"] = int(transaction["before_cash"])
+
+
+            prev_transaction = transaction
+            
+            update_single_transaction(transaction["id"], cursor, transaction)
+        return len(transactions)
+
+
 @app.route("/single_record")
 def single_record():
     if request.method == "POST":
@@ -47,9 +91,97 @@ def single_record():
     # return transaction
     return render_template("single_record.html", fields=transaction)
 
-    
+@app.route("/edit", methods=["GET", "POST"])
+def edit_record():
+    if request.method == "GET":
+        id = int(request.args.get("id"))
+        
+        conn = connect_db()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        cursor.execute(f"SELECT * FROM TRANSACTIONS WHERE ID={id};")
+        
+        transactions = cursor.fetchall()
+        if len(transactions) == 0:
+            return render_template("edit_record.html", fields=dict(id=-1))
+        transaction = transactions[0]
 
-@app.route("/income", methods=["POST"])
+        return render_template("edit_record.html", fields=transaction)
+    else:
+        id = int(request.form["id"])
+        
+        conn = connect_db()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        cursor.execute(f"SELECT * FROM TRANSACTIONS WHERE ID > {id};")
+        
+        transactions = cursor.fetchall()
+        if len(transactions) == 0:
+            # case where the queried transaction is the last transaction
+
+            account = request.form["account"]
+            amount = int(request.form["amount"])
+            datetime_str = request.form["datetime"]
+            description = request.form["description"]
+            
+            before_gpay = int(request.form["before_gpay"])
+            after_gpay = int(request.form["after_gpay"]) 
+            before_cash = int(request.form["before_cash"])
+            after_cash = int(request.form["after_cash"])
+            transaction_type = int(request.form["type"])
+
+            if int(request.form["type"]) * (int(request.form["after_" + account]) - int(request.form["before_" + account])) != int(amount):
+                return f"<html>before and after amounts do not match with amount, check again, got {dict(request.form)=}</html>"
+
+            cursor.execute(f"UPDATE TRANSACTIONS SET ACCOUNT='{account}', " +
+                           f"AMOUNT={amount}, TYPE={transaction_type}, BEFORE_GPAY={before_gpay}, " +
+                           f"AFTER_GPAY={after_gpay}, BEFORE_CASH={before_cash}, AFTER_CASH={after_cash}, " +
+                           f"DATETIME='{datetime_str}', DESCRIPTION='{description}'  WHERE id={id};")
+            conn.commit()       
+            cursor.close()
+            conn.close()
+
+            return render_template("transaction_record_success.html", transaction_id=id)
+        else:
+            # get before and after delta for both modes
+            # apply the same transformation to all transactions to all transactions after that
+            cursor.execute(f"SELECT * FROM TRANSACTIONS WHERE ID={id};")
+            transaction = cursor.fetchall()[0]
+
+
+
+            account = request.form["account"]
+            amount = int(request.form["amount"])
+            datetime_str = request.form["datetime"]
+            description = request.form["description"]
+            
+            before_gpay = int(request.form["before_gpay"])
+            after_gpay = int(request.form["after_gpay"]) 
+            before_cash = int(request.form["before_cash"])
+            after_cash = int(request.form["after_cash"])
+            transaction_type = int(request.form["type"])
+
+            if int(request.form["type"]) * (int(request.form["after_" + account]) - int(request.form["before_" + account])) != int(amount):
+                return f"<html>before and after amounts do not match with amount, check again, got {dict(request.form)=}</html>"
+            
+            cursor.execute(f"UPDATE TRANSACTIONS SET ACCOUNT='{account}', " +
+                           f"AMOUNT={amount}, TYPE={transaction_type}, BEFORE_GPAY={before_gpay}, " +
+                           f"AFTER_GPAY={after_gpay}, BEFORE_CASH={before_cash}, AFTER_CASH={after_cash}, " +
+                           f"DATETIME='{datetime_str}', DESCRIPTION='{description}'  WHERE id={id};")
+
+            update_affected_transactions(id, cursor, dict(request.form))
+
+            conn.commit()       
+            cursor.close()
+            conn.close()
+
+            return render_template("transaction_record_success.html", transaction_id=id) 
+        
+def get_transactions_greater_than(id):
+    pass
+
+
+@app.route("/income", methods=["POST", "GET"])
 def add_income():
     if request.method == "POST":
         conn = connect_db()
@@ -60,7 +192,7 @@ def add_income():
 
         account = request.form["account"]
         amount = int(request.form["amount"])
-        datetime_str = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+        datetime_str = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
         description = request.form["description"]
         
         before_gpay = int(transaction["before_gpay"])
@@ -94,7 +226,6 @@ def add_income():
 
 @app.route("/expense", methods=["GET", "POST"])
 def add_expense():
-
     if request.method == "POST":
         conn = connect_db()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -104,7 +235,7 @@ def add_expense():
 
         account = request.form["account"]
         amount = int(request.form["amount"])
-        datetime_str = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+        datetime_str = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
         description = request.form["description"]
         
         before_gpay = int(transaction["before_gpay"])

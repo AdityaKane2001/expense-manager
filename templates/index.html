@@ -32,7 +32,9 @@
                         <th scope="col">Account</th>
                         <th scope="col">Amount</th>
                         <th scope="col">Transaction Type</th>
+                        <th scope="col">Before Gpay</th>
                         <th scope="col">After Gpay</th>
+                        <th scope="col">Before Cash</th>
                         <th scope="col">After Cash</th>
                         <th scope="col">Description</th>
                         <th scope="col">Datetime</th>
@@ -45,7 +47,9 @@
                         <td>{{record["account"]}}</td>        <!-- Account -->
                         <td>{{record["amount"]}}</td>        <!-- Amount -->
                         <td>{% if record["type"] == 1 %}Income{% else %}Expense{% endif %}</td>        <!-- Transaction Type -->
+                        <td>{{record["before_gpay"]}}</td>  <!-- Before Gpay -->
                         <td>{{record["after_gpay"]}}</td>        <!-- After Gpay -->
+                        <td>{{record["before_cash"]}}</td>  <!-- Before Cash -->
                         <td>{{record["after_cash"]}}</td>        <!-- After Cash -->
                         <td>{{record["description"]}}</td>        <!-- Datetime</th -->
                         <td>{{record["datetime"]}}</td>        <!-- Description -->
