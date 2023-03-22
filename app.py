@@ -122,7 +122,7 @@ def edit_record():
         
 
         if int(request.form.get("type")) * (int(request.form.get("after_" + account)) - int(request.form.get("before_" + account))) != int(request.form.get("amount")):
-            return f"<html>before and after amounts do not match with amount, check again, got {dict(request.form)=}</html>"
+            return f"<html>before and after amounts do not match with amount, check again, got {dict(request.form)}</html>"
 
         update_single_transaction(request.form.get("id"), cursor, dict(request.form))
 

@@ -20,44 +20,44 @@
         <br>
         <form action="/edit" method="POST">
             {% if fields["id"] == -1 %}
-            <p style="color:red"> Transaction ID not found </p>
+                <p style="color:red"> Transaction ID not found </p>
             {% else %}
-            <table class="table">
-                <tbody>
-                {% for name, value in fields.items() %}
-                    {% if name == "account" %}
-                        <!-- Set the input field to be a select for account-->
-                        <tr>
-                            <th scope="row">{{name}}</th>
-                            {% if fields["account"] == "gpay" %}
-                            <td><select name="account">
-                                <option value="gpay" selected>gpay</option>
-                                <option value="cash">cash</option>
-                            </select></td>
-                            {% else %}
-                                <td><select name="account">
-                                    <option value="gpay">gpay</option>
-                                    <option value="cash" selected>cash</option>
-                                </select></td>
-                            {% endif %}
-                        </tr>
-                    {% else %}
-                        {% if name == "id" %}
-                            <!-- Disable input field for id-->
+                <table class="table">
+                    <tbody>
+                    {% for name, value in fields.items() %}
+                        {% if name == "account" %}
+                            <!-- Set the input field to be a select for account-->
                             <tr>
                                 <th scope="row">{{name}}</th>
-                                <td><input type="text" name="{{name}}" value="{{fields[name]}}" readonly="readonly"></td>
+                                {% if fields["account"] == "gpay" %}
+                                <td><select name="account">
+                                    <option value="gpay" selected>gpay</option>
+                                    <option value="cash">cash</option>
+                                </select></td>
+                                {% else %}
+                                    <td><select name="account">
+                                        <option value="gpay">gpay</option>
+                                        <option value="cash" selected>cash</option>
+                                    </select></td>
+                                {% endif %}
                             </tr>
                         {% else %}
-                            <tr>
-                                <th scope="row">{{name}}</th>
-                                <td><input type="text" name="{{name}}" value="{{fields[name]}}"></td>
-                            </tr>
+                            {% if name == "id" %}
+                                <!-- Disable input field for id-->
+                                <tr>
+                                    <th scope="row">{{name}}</th>
+                                    <td><input type="text" name="{{name}}" value="{{fields[name]}}" readonly="readonly"></td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <th scope="row">{{name}}</th>
+                                    <td><input type="text" name="{{name}}" value="{{fields[name]}}"></td>
+                                </tr>
+                            {% endif %}
                         {% endif %}
-                    {% endif %}
-                {% endfor %}
-                </tbody>
-            </table>
+                    {% endfor %}
+                    </tbody>
+                </table>
 
 
             {% endif %}
