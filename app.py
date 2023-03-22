@@ -94,6 +94,7 @@ def single_record():
 @app.route("/edit", methods=["GET", "POST"])
 def edit_record():
     if request.method == "GET":
+        # Get edit form
         id = int(request.args.get("id"))
         
         conn = connect_db()
@@ -108,7 +109,9 @@ def edit_record():
 
         return render_template("edit_record.html", fields=transaction)
     else:
-        id = int(request.form["id"])
+        # Execute edit
+        id = int(request.form.get("id"))
+        account = request.form.get("account")
         
         conn = connect_db()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -116,70 +119,23 @@ def edit_record():
         cursor.execute(f"SELECT * FROM TRANSACTIONS WHERE ID > {id};")
         
         transactions = cursor.fetchall()
-        if len(transactions) == 0:
-            # case where the queried transaction is the last transaction
+        
 
-            account = request.form["account"]
-            amount = int(request.form["amount"])
-            datetime_str = request.form["datetime"]
-            description = request.form["description"]
-            
-            before_gpay = int(request.form["before_gpay"])
-            after_gpay = int(request.form["after_gpay"]) 
-            before_cash = int(request.form["before_cash"])
-            after_cash = int(request.form["after_cash"])
-            transaction_type = int(request.form["type"])
+        if int(request.form.get("type")) * (int(request.form.get("after_" + account)) - int(request.form.get("before_" + account))) != int(request.form.get("amount")):
+            return f"<html>before and after amounts do not match with amount, check again, got {dict(request.form)=}</html>"
 
-            if int(request.form["type"]) * (int(request.form["after_" + account]) - int(request.form["before_" + account])) != int(amount):
-                return f"<html>before and after amounts do not match with amount, check again, got {dict(request.form)=}</html>"
+        update_single_transaction(request.form.get("id"), cursor, dict(request.form))
 
-            cursor.execute(f"UPDATE TRANSACTIONS SET ACCOUNT='{account}', " +
-                           f"AMOUNT={amount}, TYPE={transaction_type}, BEFORE_GPAY={before_gpay}, " +
-                           f"AFTER_GPAY={after_gpay}, BEFORE_CASH={before_cash}, AFTER_CASH={after_cash}, " +
-                           f"DATETIME='{datetime_str}', DESCRIPTION='{description}'  WHERE id={id};")
-            conn.commit()       
-            cursor.close()
-            conn.close()
-
-            return render_template("transaction_record_success.html", transaction_id=id)
-        else:
-            # get before and after delta for both modes
-            # apply the same transformation to all transactions to all transactions after that
-            cursor.execute(f"SELECT * FROM TRANSACTIONS WHERE ID={id};")
-            transaction = cursor.fetchall()[0]
-
-
-
-            account = request.form["account"]
-            amount = int(request.form["amount"])
-            datetime_str = request.form["datetime"]
-            description = request.form["description"]
-            
-            before_gpay = int(request.form["before_gpay"])
-            after_gpay = int(request.form["after_gpay"]) 
-            before_cash = int(request.form["before_cash"])
-            after_cash = int(request.form["after_cash"])
-            transaction_type = int(request.form["type"])
-
-            if int(request.form["type"]) * (int(request.form["after_" + account]) - int(request.form["before_" + account])) != int(amount):
-                return f"<html>before and after amounts do not match with amount, check again, got {dict(request.form)=}</html>"
-            
-            cursor.execute(f"UPDATE TRANSACTIONS SET ACCOUNT='{account}', " +
-                           f"AMOUNT={amount}, TYPE={transaction_type}, BEFORE_GPAY={before_gpay}, " +
-                           f"AFTER_GPAY={after_gpay}, BEFORE_CASH={before_cash}, AFTER_CASH={after_cash}, " +
-                           f"DATETIME='{datetime_str}', DESCRIPTION='{description}'  WHERE id={id};")
-
+        if len(transactions) > 0:
+            # case where the queried transaction is not the last transaction
             update_affected_transactions(id, cursor, dict(request.form))
 
-            conn.commit()       
-            cursor.close()
-            conn.close()
+        conn.commit()       
+        cursor.close()
+        conn.close()
 
-            return render_template("transaction_record_success.html", transaction_id=id) 
+        return render_template("transaction_record_success.html", transaction_id=id)
         
-def get_transactions_greater_than(id):
-    pass
-
 
 @app.route("/income", methods=["POST", "GET"])
 def add_income():
@@ -282,4 +238,4 @@ def show_transactions():
     return render_template("index.html", records=transactions)
 
 if __name__ == "__main__": 
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run(host="0.0.0.0", port=5000, debug=True)

@@ -26,6 +26,7 @@
                 <tbody>
                 {% for name, value in fields.items() %}
                     {% if name == "account" %}
+                        <!-- Set the input field to be a select for account-->
                         <tr>
                             <th scope="row">{{name}}</th>
                             {% if fields["account"] == "gpay" %}
@@ -41,10 +42,18 @@
                             {% endif %}
                         </tr>
                     {% else %}
-                        <tr>
-                            <th scope="row">{{name}}</th>
-                            <td><input type="text" name="{{name}}" value="{{fields[name]}}"></td>
-                        </tr>
+                        {% if name == "id" %}
+                            <!-- Disable input field for id-->
+                            <tr>
+                                <th scope="row">{{name}}</th>
+                                <td><input type="text" name="{{name}}" value="{{fields[name]}}" readonly="readonly"></td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <th scope="row">{{name}}</th>
+                                <td><input type="text" name="{{name}}" value="{{fields[name]}}"></td>
+                            </tr>
+                        {% endif %}
                     {% endif %}
                 {% endfor %}
                 </tbody>
