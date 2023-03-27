@@ -48,9 +48,9 @@
                         <td>{{record["amount"]}}</td>        <!-- Amount -->
                         <td>{% if record["type"] == 1 %}Income{% else %}Expense{% endif %}</td>        <!-- Transaction Type -->
                         <td>{{record["before_gpay"]}}</td>  <!-- Before Gpay -->
-                        <td>{{record["after_gpay"]}}</td>        <!-- After Gpay -->
+                        <td><b>{{record["after_gpay"]}}</b></td>        <!-- After Gpay -->
                         <td>{{record["before_cash"]}}</td>  <!-- Before Cash -->
-                        <td>{{record["after_cash"]}}</td>        <!-- After Cash -->
+                        <td><b>{{record["after_cash"]}}</b></td>        <!-- After Cash -->
                         <td>{{record["description"]}}</td>        <!-- Datetime</th -->
                         <td>{{record["datetime"]}}</td>        <!-- Description -->
                         <td><a href="/single_record?id={{record['id']}}" target="blank">Link</a></td>

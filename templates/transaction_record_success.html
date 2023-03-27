@@ -11,16 +11,19 @@
     <title>Expense Manager</title>
 </head>
 
-<body>
+<script>
+
+</script>
+
+<body onload="setTimeout(function(){location.assign('/');}, 1500);">
     <div class="container">
 
         <h1> Transaction record successful </h1>
         
         <h3> See the latest transaction  <a href="/single_record?id={{transaction_id}}">here</a>.</h3>
 
-        <a href="/">Back to home</a>
+        <h4>Returning to home...</h4>
     </div>
-
 
 
 </body>
