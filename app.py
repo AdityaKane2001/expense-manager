@@ -1,12 +1,12 @@
-from flask import Flask, request, render_template
-from flask_cors import CORS
-import urllib.parse as up
-from dotenv import load_dotenv
 import os
-import psycopg2
-import psycopg2.extras
+import urllib.parse as up
 from datetime import datetime
 
+import psycopg2
+import psycopg2.extras
+from dotenv import load_dotenv
+from flask import Flask, redirect, render_template, request, url_for
+from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
@@ -137,14 +137,23 @@ def edit_record():
         return render_template("transaction_record_success.html", transaction_id=id)
         
 
+
 @app.route("/income", methods=["POST", "GET"])
 def add_income():
     if request.method == "POST":
         conn = connect_db()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute("SELECT BEFORE_GPAY, AFTER_GPAY, BEFORE_CASH, AFTER_CASH FROM TRANSACTIONS WHERE ID=(SELECT MAX(ID) FROM TRANSACTIONS);")
+        cursor.execute("SELECT * FROM TRANSACTIONS WHERE ID=(SELECT MAX(ID) FROM TRANSACTIONS);")
 
-        transaction = dict(cursor.fetchall()[0])
+        fetchall = cursor.fetchall()
+        print(fetchall)
+
+        if len(fetchall) == 0:
+            transaction = dict(before_gpay=0, before_cash=0, after_cash=0, after_gpay=0)
+            transaction_id = 1
+        else:
+            transaction = dict(fetchall[0])
+            transaction_id = transaction["id"] + 1
 
         account = request.form["account"]
         amount = int(request.form["amount"])
@@ -159,25 +168,72 @@ def add_income():
         if account == "gpay":
             before_gpay = after_gpay
             after_gpay = after_gpay + amount
-            after_cash = before_cash
+            before_cash = after_cash
         else:
             before_cash = after_cash
             after_cash = after_cash + amount
-            after_gpay = before_gpay
+            before_gpay = after_gpay
         
         conn = connect_db()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute(f"INSERT INTO TRANSACTIONS(ACCOUNT, AMOUNT, TYPE, BEFORE_GPAY, AFTER_GPAY, BEFORE_CASH, AFTER_CASH, DATETIME, DESCRIPTION) " +
-                       f"VALUES ( '{account}', {amount}, +1, {before_gpay}, {after_gpay}, {before_cash}, {after_cash}, '{datetime_str}', '{description}');")
+                       f"VALUES ( '{account}', {amount}, +1, {before_gpay}, {after_gpay}, {before_cash}, {after_cash}, '{datetime_str}', '{description}') RETURNING id;")
         
+    
         conn.commit()       
         cursor.close()
         conn.close()
 
-        transaction_id = cursor.fetchall()[0]["id"]
         return render_template("transaction_record_success.html", transaction_id=transaction_id)
     else:
         return render_template("income.html")
+
+
+@app.route("/flush", methods=["GET"])
+def flush_records():
+    conn = connect_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cursor.execute("SELECT BEFORE_GPAY, AFTER_GPAY, BEFORE_CASH, AFTER_CASH FROM TRANSACTIONS WHERE ID=(SELECT MAX(ID) FROM TRANSACTIONS);")
+
+    if len(cursor.fetchall()) == 0:
+        transaction = dict(before_gpay=0, before_cash=0, after_cash=0, after_gpay=0)
+    else:
+        transaction = dict(cursor.fetchall()[0])
+
+
+
+    datetime_str = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
+    before_gpay = int(transaction["before_gpay"])
+    after_gpay = int(transaction["after_gpay"]) 
+    before_cash = int(transaction["before_cash"])
+    after_cash = int(transaction["after_cash"])
+
+    cash_amount = after_cash
+    gpay_amount = after_gpay
+
+    for account in ["gpay", "cash"]:
+        if account == "gpay":
+            before_gpay = after_gpay
+            after_gpay = 0
+
+            cursor.execute(f"INSERT INTO TRANSACTIONS(ACCOUNT, AMOUNT, TYPE, BEFORE_GPAY, AFTER_GPAY, BEFORE_CASH, AFTER_CASH, DATETIME, DESCRIPTION) " +
+                       f"VALUES ( '{account}', {gpay_amount}, -1, {before_gpay}, {after_gpay}, {before_cash}, {after_cash}, '{datetime_str}', 'flush gpay') RETURNING id;")
+
+            conn.commit()
+        else:
+            before_cash = after_cash
+            after_cash = 0
+
+            cursor.execute(f"INSERT INTO TRANSACTIONS(ACCOUNT, AMOUNT, TYPE, BEFORE_GPAY, AFTER_GPAY, BEFORE_CASH, AFTER_CASH, DATETIME, DESCRIPTION) " +
+                       f"VALUES ( '{account}', {cash_amount}, -1, {before_gpay}, {after_gpay}, {before_cash}, {after_cash}, '{datetime_str}', 'flush cash') RETURNING id;")
+            transaction_id = cursor.fetchall()[0]["id"]
+            conn.commit()
+
+    conn.commit()       
+    cursor.close()
+    conn.close()
+
+    return render_template("transaction_record_success.html", transaction_id=transaction_id)
 
 
 @app.route("/expense", methods=["GET", "POST"])
@@ -187,7 +243,10 @@ def add_expense():
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute("SELECT BEFORE_GPAY, AFTER_GPAY, BEFORE_CASH, AFTER_CASH FROM TRANSACTIONS WHERE ID=(SELECT MAX(ID) FROM TRANSACTIONS);")
 
-        transaction = dict(cursor.fetchall()[0])
+        if len(cursor.fetchall()) == 0:
+            transaction = dict(before_gpay=0, before_cash=0, after_cash=0, after_gpay=0)
+        else:
+            transaction = dict(cursor.fetchall()[0])
 
         account = request.form["account"]
         amount = int(request.form["amount"])
@@ -202,11 +261,11 @@ def add_expense():
         if account == "gpay":
             before_gpay = after_gpay
             after_gpay = after_gpay - amount
-            after_cash = before_cash
+            before_cash = after_cash
         else:
             before_cash = after_cash
             after_cash = after_cash - amount
-            after_gpay = before_gpay
+            before_gpay = after_gpay
         
         conn = connect_db()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
