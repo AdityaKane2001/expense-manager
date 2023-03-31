@@ -243,10 +243,15 @@ def add_expense():
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute("SELECT BEFORE_GPAY, AFTER_GPAY, BEFORE_CASH, AFTER_CASH FROM TRANSACTIONS WHERE ID=(SELECT MAX(ID) FROM TRANSACTIONS);")
 
-        if len(cursor.fetchall()) == 0:
+        fetchall = cursor.fetchall()
+        print(fetchall)
+
+        if len(fetchall) == 0:
             transaction = dict(before_gpay=0, before_cash=0, after_cash=0, after_gpay=0)
+            transaction_id = 1
         else:
-            transaction = dict(cursor.fetchall()[0])
+            transaction = dict(fetchall[0])
+            transaction_id = transaction["id"] + 1
 
         account = request.form["account"]
         amount = int(request.form["amount"])
