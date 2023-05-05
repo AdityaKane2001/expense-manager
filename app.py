@@ -195,10 +195,12 @@ def flush_records():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("SELECT BEFORE_GPAY, AFTER_GPAY, BEFORE_CASH, AFTER_CASH FROM TRANSACTIONS WHERE ID=(SELECT MAX(ID) FROM TRANSACTIONS);")
 
-    if len(cursor.fetchall()) == 0:
+    fetchall = cursor.fetchall()
+
+    if len(fetchall) == 0:
         transaction = dict(before_gpay=0, before_cash=0, after_cash=0, after_gpay=0)
     else:
-        transaction = dict(cursor.fetchall()[0])
+        transaction = dict(fetchall[0])
 
 
 
